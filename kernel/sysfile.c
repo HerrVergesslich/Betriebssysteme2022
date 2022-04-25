@@ -484,3 +484,34 @@ sys_pipe(void)
   }
   return 0;
 }
+
+uint64 sys_lseek(void) {
+  
+  struct file *fd;
+  int offset;
+  int whence;
+
+  if(argfd(0, 0, &fd) < 0 || argint(1, &offset) < 0 || argint(2, &whence) < 0) {
+    return -1;
+  }
+
+  if(offset < 0 || offset > fd->ip->size) {
+    return -1;
+  }
+
+  if(whence == SEEK_SET) {
+    fd->off = offset;
+  } else if(whence == SEEK_CUR) {
+    fd->off += offset;
+  } else if(whence == SEEK_END) {
+    struct inode *ip = fd->ip;
+    ilock(ip);
+    fd->off = ip->size + offset;
+    iunlock(ip);
+  } else {
+    return -1;
+  }
+
+  return fd->off;
+
+}

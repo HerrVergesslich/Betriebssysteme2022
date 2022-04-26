@@ -40,3 +40,4 @@ entry("uptime");
 #syscalls (selfmade)
 entry("lseek");
 entry("sysinfo");
+entry("trace");

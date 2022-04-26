@@ -27,7 +27,8 @@ int uptime(void);
 
 //system calls (selfmade)
 int lseek(int fd, int offset, int whence);
-void sysinfo(struct sysinfo*);
+int sysinfo(struct sysinfo*);
+int trace(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

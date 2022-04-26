@@ -53,7 +53,6 @@ int strstr(const char *s, const char *t) {
       }
     }
   }
-
   return -1;
 }
 

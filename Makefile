@@ -134,6 +134,7 @@ UPROGS=\
 	$U/_zombie\
 	$U/_find\
 	$U/_lseektest\
+	$U/_trace\
 
 fs.img: mkfs/mkfs README TESTFILE $(UPROGS)
 	mkfs/mkfs fs.img README TESTFILE $(UPROGS)

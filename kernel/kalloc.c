@@ -71,5 +71,5 @@ void *kalloc(void) {
 }
 
 int get_free_memory(void) {
-  
+  return 0;
 }

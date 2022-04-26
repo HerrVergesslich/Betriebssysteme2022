@@ -654,3 +654,8 @@ procdump(void)
     printf("\n");
   }
 }
+
+int get_running_process_count(void) {
+  //TODO: Implement
+  return 0;
+}

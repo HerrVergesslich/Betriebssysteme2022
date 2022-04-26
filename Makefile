@@ -133,9 +133,10 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_find\
+	$U/_lseektest\
 
-fs.img: mkfs/mkfs README $(UPROGS)
-	mkfs/mkfs fs.img README $(UPROGS)
+fs.img: mkfs/mkfs README TESTFILE $(UPROGS)
+	mkfs/mkfs fs.img README TESTFILE $(UPROGS)
 
 -include kernel/*.d user/*.d
 

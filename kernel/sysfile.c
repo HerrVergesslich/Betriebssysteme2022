@@ -495,14 +495,20 @@ uint64 sys_lseek(void) {
     return -1;
   }
 
-  if(offset < 0 || offset > fd->ip->size) {
-    return -1;
+  if(whence == SEEK_SET && (offset < 0 || offset > fd->ip->size)) {
+    return -2;
+  }
+  if(whence == SEEK_CUR && (fd->off + offset < 0 || fd->off + offset > fd->ip->size)) {
+    return -3;
+  }
+  if(whence == SEEK_END && (fd->ip->size + offset < 0 || offset > 0)) {
+    return -4;
   }
 
   if(whence == SEEK_SET) {
     fd->off = offset;
   } else if(whence == SEEK_CUR) {
-    fd->off += offset;
+    fd->off = (fd->off + offset);
   } else if(whence == SEEK_END) {
     struct inode *ip = fd->ip;
     ilock(ip);

@@ -36,4 +36,7 @@ entry("getpid");
 entry("sbrk");
 entry("sleep");
 entry("uptime");
+
+#syscalls (selfmade)
 entry("lseek");
+entry("sysinfo");

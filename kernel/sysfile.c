@@ -501,7 +501,7 @@ uint64 sys_lseek(void) {
   if(whence == SEEK_CUR && (fd->off + offset < 0 || fd->off + offset > fd->ip->size)) {
     return -3;
   }
-  if(whence == SEEK_END && (fd->ip->size + offset < 0 || offset > 0)) {
+  if(whence == SEEK_END && ((int)fd->ip->size + offset < 0 || offset > 0)) {
     return -4;
   }
 

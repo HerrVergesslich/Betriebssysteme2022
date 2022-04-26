@@ -115,6 +115,24 @@ int lseektest(void) {
         printf("--> lseek(fd, 4, SEEK_END) > 0\n\n", ret);
     }
 
+        /**
+     * ==========================================
+     * Test: SEEK_END - Fail2
+     * ==========================================
+     */
+
+    lseek(fd, 0, SEEK_SET);
+    clearBuffer(buffer, 10);
+
+    ret = lseek(fd, -12, SEEK_END);
+    if (ret < 0) {
+        printf("Test passed at: SEEK_END - Fail2\n");
+        printf("--> lseek(fd, -12, SEEK_END) < 0\n\n", ret);
+    } else {
+        printf("Test failed at: SEEK_END - Fail2\n");
+        printf("--> lseek(fd, -12, SEEK_END) > 0\n\n", ret);
+    }
+
     /**
      * ==========================================
      * Test: SEEK_SET - Fail
@@ -131,6 +149,24 @@ int lseektest(void) {
     } else {
         printf("Test failed at: SEEK_SET - Fail\n");
         printf("--> lseek(fd, 12, SEEK_SET) > 0\n\n", ret);
+    }
+
+        /**
+     * ==========================================
+     * Test: SEEK_SET - Fail2
+     * ==========================================
+     */
+
+    lseek(fd, 0, SEEK_SET);
+    clearBuffer(buffer, 10);
+
+    ret = lseek(fd, -3, SEEK_SET);
+    if (ret < 0) {
+        printf("Test passed at: SEEK_SET - Fail2\n");
+        printf("--> lseek(fd, -3, SEEK_SET) < 0\n\n", ret);
+    } else {
+        printf("Test failed at: SEEK_SET - Fail2\n");
+        printf("--> lseek(fd, -3, SEEK_SET) > 0\n\n", ret);
     }
 
     return failed ? -1 : 0;

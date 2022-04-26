@@ -70,6 +70,16 @@ void *kalloc(void) {
   return (void *)r;
 }
 
+//function to get free memory in bytes
 int get_free_memory(void) {
-  return 0;
+  struct run *r;
+  int free_memory = 0;
+  acquire(&kmem.lock);
+  r = kmem.freelist;
+  while (r) {
+    free_memory += PGSIZE;
+    r = r->next;
+  }
+  release(&kmem.lock);
+  return free_memory;
 }

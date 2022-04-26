@@ -658,7 +658,14 @@ procdump(void)
   }
 }
 
+//Get number of running processes
 int get_running_process_count(void) {
-  //TODO: Implement
-  return 0;
+  struct proc *p;
+  int count = 0;
+  for(p = proc; p < &proc[NPROC]; p++){
+    if(p->state != UNUSED) {
+      count++;
+    }
+  }
+  return count;
 }

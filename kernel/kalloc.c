@@ -70,7 +70,7 @@ void *kalloc(void) {
   return (void *)r;
 }
 
-//function to get free memory in bytes
+//Get free memory size in bytes
 int get_free_memory(void) {
   struct run *r;
   int free_memory = 0;

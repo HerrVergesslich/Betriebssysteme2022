@@ -446,7 +446,7 @@ void printPagetableRek(pagetable_t pagetable, int sublevel) {
       printf("%d: pte %p pa %p flags %s%s%s%s%s\n", i, tableEntry, PTE2PA(tableEntry), (tableEntry & PTE_U)?"U":"-", (tableEntry & PTE_X)?"X":"-", (tableEntry & PTE_W)?"W":"-", (tableEntry & PTE_R)?"R":"-", (tableEntry & PTE_V)?"V":"-");      
     }
 
-    if((tableEntry & PTE_V) && (PTE_R|PTE_W|PTE_W) == 0) { //Check if valid + contains pointer to sub table
+    if((tableEntry & PTE_V) && (tableEntry & (PTE_R|PTE_W|PTE_W)) == 0) { //Check if valid + contains pointer to sub table
       uint64 entryValue = PTE2PA(tableEntry);
       pagetable_t subtable = (pagetable_t)entryValue;
       printPagetableRek(subtable, sublevel + 1);

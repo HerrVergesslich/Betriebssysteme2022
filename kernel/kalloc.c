@@ -74,7 +74,9 @@ void *kalloc(void) {
 int get_free_memory(void) {
   struct run *r;
   int free_memory = 0;
+
   acquire(&kmem.lock);
+  
   r = kmem.freelist;
   while (r) {
     free_memory += PGSIZE;

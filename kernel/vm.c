@@ -432,3 +432,30 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return -1;
   }
 }
+
+void printPagetableRek(pagetable_t pagetable, int sublevel) {
+
+  for(int i = 0; i < 512; i ++) { //512 Pagetables
+    pte_t tableEntry = pagetable[i];
+
+    if(tableEntry & PTE_V) { //Check if pagetable is valid
+      
+      for(int i = 0; i < sublevel; i ++) {
+        printf(".. ");
+      }
+      printf("%d: pte %p pa %p flags %s%s%s%s%s\n", i, tableEntry, PTE2PA(tableEntry), (tableEntry & PTE_U)?"U":"-", (tableEntry & PTE_X)?"X":"-", (tableEntry & PTE_W)?"W":"-", (tableEntry & PTE_R)?"R":"-", (tableEntry & PTE_V)?"V":"-");      
+    }
+
+    if((tableEntry & PTE_V) && (PTE_R|PTE_W|PTE_W) == 0) { //Check if valid + contains pointer to sub table
+      uint64 entryValue = PTE2PA(tableEntry);
+      pagetable_t subtable = (pagetable_t)entryValue;
+      printPagetableRek(subtable, sublevel + 1);
+    }
+  }
+
+}
+
+void vmprint(pagetable_t pagetable) {
+    printf("page table %p\n", pagetable);
+    printPagetableRek(pagetable, 0);
+}

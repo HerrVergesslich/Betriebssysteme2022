@@ -79,12 +79,18 @@ void usertrap(void) {
           //Virtuele Speicheradressen an physische Speicheradressen binden
           kfree(mem);
           p->killed = 1;
+        } else {
+          //Success
         }
       } else { 
         //Physischer Speicher konnte nicht reserviert werden (1x 4096 bytes)
         p->killed = 1;
       }
     } else {
+      printf("ERROR: Accessing unallocated memory!\n");
+      printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
+      printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
+      // panic("lazy allocate: acessing unallocated memory");
       p->killed = 1;
     }    
 

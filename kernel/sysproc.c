@@ -51,7 +51,9 @@ sys_sbrk(void)
   if(n > 0) {
     myproc()->sz += n;
   } else if(n < 0) {
-    uvmdealloc(myproc()->pagetable, addr, addr+n); //Speicher des Prozesses wird verkleinert
+    if(growproc(n) != 0) {
+      panic("sbrk: Failed shrink"); //Speicher des Prozesses wird verkleinert
+    }
   }
     
   return addr;

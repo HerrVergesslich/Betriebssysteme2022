@@ -33,28 +33,24 @@ trapinithart(void)
 // handle an interrupt, exception, or system call from user space.
 // called from trampoline.S
 //
-void
-usertrap(void)
-{
+void usertrap(void) {
   int which_dev = 0;
 
-  if((r_sstatus() & SSTATUS_SPP) != 0)
-    panic("usertrap: not from user mode");
+  if ((r_sstatus() & SSTATUS_SPP) != 0) panic("usertrap: not from user mode");
 
   // send interrupts and exceptions to kerneltrap(),
   // since we're now in the kernel.
   w_stvec((uint64)kernelvec);
 
   struct proc *p = myproc();
-  
+
   // save user program counter.
   p->trapframe->epc = r_sepc();
-  
-  if(r_scause() == 8){
+
+  if (r_scause() == 8) {
     // system call
 
-    if(p->killed)
-      exit(-1);
+    if (p->killed) exit(-1);
 
     // sepc points to the ecall instruction,
     // but we want to return to the next instruction.
@@ -65,7 +61,7 @@ usertrap(void)
     intr_on();
 
     syscall();
-  } else if((which_dev = devintr()) != 0){
+  } else if ((which_dev = devintr()) != 0) {
     // ok
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
@@ -73,12 +69,10 @@ usertrap(void)
     p->killed = 1;
   }
 
-  if(p->killed)
-    exit(-1);
+  if (p->killed) exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
-    yield();
+  if (which_dev == 2) yield();
 
   usertrapret();
 }

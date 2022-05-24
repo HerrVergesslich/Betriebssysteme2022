@@ -64,15 +64,15 @@ void usertrap(void) {
 
     syscall();
 
-  } else if(trapCause == 0xf || trapCause == 0xd) { //0xF or 0xD = Pagefault
+  } else if(trapCause == 13 || trapCause == 15) { //0xF or 0xD = Pagefault
 
     //LAZY ALLOCATOR
 
     uint64 addr = r_stval();
     uint64 pgBot = PGROUNDDOWN(addr);
-    uint8* mem = kalloc();
 
-    if(addr < p->sz && addr > PGROUNDUP(p->trapframe->sp)) {
+    if(addr <= p->sz && addr >= PGROUNDUP(p->trapframe->sp)) {
+      uint8* mem = kalloc();
       if(mem != 0) { 
         memset(mem, 0, PGSIZE); //Speicher mit 0en füllen
         if(mappages(p->pagetable, pgBot, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {

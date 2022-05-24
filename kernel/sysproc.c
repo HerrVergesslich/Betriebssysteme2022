@@ -49,12 +49,9 @@ sys_sbrk(void)
   addr = myproc()->sz;
 
   if(n > 0) {
-    uint64 a = addr;
-    for(; a < addr+n; a += PGSIZE)
-    myproc()->sz = a;
+    myproc()->sz += n;
   } else if(n < 0) {
-    if(growproc(n) < 0)
-        return -1;
+    uvmdealloc(myproc()->pagetable, addr, addr+n); //Speicher des Prozesses wird verkleinert
   }
     
   return addr;

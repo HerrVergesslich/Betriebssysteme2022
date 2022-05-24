@@ -138,7 +138,7 @@ printfinit(void)
 void _backtrace(uint64 fp, uint64 top, uint64 bottom) {
   uint64* ptr_retAdr = (uint64*)(fp - 8);
   uint64* ptr_prevFrame = (uint64*)(fp - 16);
-  if(bottom <= (uint64)ptr_prevFrame && (uint64)ptr_prevFrame < top) {
+  if(bottom <= *ptr_prevFrame && *ptr_prevFrame <= top) {
     printf("%p\n", *ptr_retAdr, ptr_prevFrame);
     _backtrace(*ptr_prevFrame, top, bottom);
   }

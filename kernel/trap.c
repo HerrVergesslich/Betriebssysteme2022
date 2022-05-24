@@ -72,17 +72,21 @@ void usertrap(void) {
     uint64 pgBot = PGROUNDDOWN(addr);
     uint8* mem = kalloc();
 
-    if(mem != 0) { 
-      memset(mem, 0, PGSIZE); //Speicher mit 0en füllen
-      if(mappages(p->pagetable, pgBot, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
-        //Virtuele Speicheradressen an physische Speicheradressen binden
-        kfree(mem);
+    if(addr < p->sz && addr > PGROUNDUP(p->trapframe->sp)) {
+      if(mem != 0) { 
+        memset(mem, 0, PGSIZE); //Speicher mit 0en füllen
+        if(mappages(p->pagetable, pgBot, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
+          //Virtuele Speicheradressen an physische Speicheradressen binden
+          kfree(mem);
+          p->killed = 1;
+        }
+      } else { 
+        //Physischer Speicher konnte nicht reserviert werden (1x 4096 bytes)
         p->killed = 1;
       }
-    } else { 
-      //Physischer Speicher konnte nicht reserviert werden (1x 4096 bytes)
+    } else {
       p->killed = 1;
-    }
+    }    
 
   } else if ((which_dev = devintr()) != 0) {
     // ok

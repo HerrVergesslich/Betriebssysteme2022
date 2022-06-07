@@ -298,6 +298,16 @@ sys_open(void)
   begin_op();
 
   if(omode & O_CREATE){
+    char parentName[DIRSIZ];
+    struct inode* parent = nameiparent(path, parentName);
+
+    if(!permission(parent, PERMISSION_WRITE)) {
+      iunlockput(parent);
+      end_op();
+      return -1;
+    }
+    iunlockput(parent);
+
     ip = create(path, T_FILE, 0, 0);
     if(ip == 0){
       end_op();
@@ -310,9 +320,7 @@ sys_open(void)
     }
     ilock(ip);
 
-    
     //Handle Symlinks
-
     int rekPath = 0; //Count Symlink-Chains
 
     //While path is SYMLINK, O_NOWFOLLOW is not set and have not reached max. depth
@@ -348,11 +356,29 @@ sys_open(void)
       return -1;
     }
 
+    //CHECK PERMISSIONS
+    if((omode & O_WRONLY) && !permission(ip, (PERMISSION_WRITE))) {
+      iunlockput(ip);
+      end_op();
+      return -1;
+    }
+    if((omode & O_RDONLY) && !permission(ip, (PERMISSION_READ))) {
+      iunlockput(ip);
+      end_op();
+      return -1;
+    }
+    if((omode & O_RDWR) && !permission(ip, (PERMISSION_READ | PERMISSION_WRITE))) {
+      iunlockput(ip);
+      end_op();
+      return -1;
+    }
+
     if(ip->type == T_DIR && omode != O_RDONLY){
       iunlockput(ip);
       end_op();
       return -1;
     }
+
   }
 
   if(ip->type == T_DEVICE && (ip->major < 0 || ip->major >= NDEV)){
@@ -530,7 +556,7 @@ uint64 sys_symlink(void) {
   char path[MAXPATH];
 
   if(argstr(0, target, MAXPATH) < 0 || argstr(1, path, MAXPATH) < 0) {
-    if(DEBUG_MODE) printf("Parameter fails\n");
+    if(DEBUG_MODE) printf("symlink: Parameter fails\n");
     return -1;
   }
 
@@ -540,12 +566,12 @@ uint64 sys_symlink(void) {
   //Could not create node
   if(in == 0) {
     end_op();
-    if(DEBUG_MODE) printf("Could not create node\n");
+    if(DEBUG_MODE) printf("symlink: Could not create node\n");
     return -1;
   }
 
   if(writei(in, 0, (uint64)target, 0, strlen(target)) != strlen(target)) {
-    if(DEBUG_MODE) printf("Could not write target path to node\n");
+    if(DEBUG_MODE) printf("symlink: Could not write target path to node\n");
     iunlockput(in);
     end_op();
     return -1;
@@ -563,20 +589,56 @@ uint64 sys_chown(void) {
   int uid, gid;
 
   if(argstr(0, path, MAXPATH) < 0 || argint(1, &uid) < 0 || argint(2, &gid) < 0) {
-    if(DEBUG_MODE) printf("Parameter fails\n");
+    if(DEBUG_MODE) printf("chown: Parameter fails\n");
     return -1;
   }
 
   begin_op();
   
   struct inode* in = namei(path);
-  in->uid = uid;
-  in->gid = gid;
+
+  if(in->uid != -1 && myproc()->uid == 0)
+    in->uid = uid;
+
+  if(in->gid != -1 && (myproc()->uid == 0 || myproc()->uid == in->uid))
+    in->gid = gid;
 
   iunlockput(in);
   end_op();
+
+  return 0;
 }
 
 uint64 sys_chmod(void) {
 
+  char path[MAXPATH];
+  int mode;
+
+  if(argstr(0, path, MAXPATH) < 0 || argint(1, &mode) < 0) {
+    if(DEBUG_MODE) printf("chmod: Parameter fails\n");
+    return -1;
+  }
+
+  begin_op();
+
+  struct inode* in = namei(path);
+
+  if(in == 0) {
+    end_op();
+    if(DEBUG_MODE) printf("chmod: Could not find node\n");
+    return -1;
+  }
+
+  if(myproc()->uid == in->uid || myproc()->uid == 0) {
+    in->mode = mode;
+  } else {
+    iunlockput(in);
+    end_op();
+    if(DEBUG_MODE) printf("chmod: Permission denied\n");
+    return -1;
+  }
+
+  iunlockput(in);
+  end_op();
+  return 0;
 }

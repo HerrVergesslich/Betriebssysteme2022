@@ -689,6 +689,8 @@ nameiparent(char *path, char *name)
 
 int permission(struct inode* ip, int mask) {
 
+  if(ip == 0) return 0;
+
   //Root User or users who are in root group have all permissions
   if(myproc()->uid == 0 || myproc()->gid == 0) return 1;
 
@@ -696,13 +698,13 @@ int permission(struct inode* ip, int mask) {
 
   //Is Owner
   if(ip->uid == myproc()->uid) {
-    short ownerMask = (mask & 0b000111000);
+    short ownerMask = (mask & 0b111000000);
     if((ip->mode & ownerMask) == ownerMask) return 1;
   }
   
   //Is Group
   if(ip->gid == myproc()->gid) {
-    short groupMask = (mask & 0b111000000);
+    short groupMask = (mask & 0b000111000);
     if((ip->mode & groupMask) == groupMask) return 1;
   }
 

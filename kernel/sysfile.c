@@ -524,12 +524,13 @@ sys_pipe(void)
   return 0;
 }
 
-uint64 sys_symlink() {
+uint64 sys_symlink(void) {
 
-  char* target = 0;
-  char* path = 0;
+  char target[MAXPATH];
+  char path[MAXPATH];
 
-  if(argstr(0, target, MAXPATH) < 0 || argstr(0, path, MAXPATH) < 0) {
+  if(argstr(0, target, MAXPATH) < 0 || argstr(1, path, MAXPATH) < 0) {
+    if(DEBUG_MODE) printf("Parameter fails\n");
     return -1;
   }
 
@@ -539,14 +540,18 @@ uint64 sys_symlink() {
   //Could not create node
   if(in == 0) {
     end_op();
+    if(DEBUG_MODE) printf("Could not create node\n");
     return -1;
   }
 
   if(writei(in, 0, (uint64)target, 0, strlen(target)) != strlen(target)) {
-    panic("symlink: writei failed");
+    if(DEBUG_MODE) printf("Could not write target path to node\n");
+    iunlockput(in);
+    end_op();
     return -1;
   }
-  
+
+  iunlockput(in);
   end_op();
 
   return 0;

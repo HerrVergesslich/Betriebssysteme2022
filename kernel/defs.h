@@ -9,6 +9,8 @@ struct sleeplock;
 struct stat;
 struct superblock;
 
+#define DEBUG_MODE 0
+
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);

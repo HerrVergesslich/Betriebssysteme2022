@@ -304,11 +304,50 @@ sys_open(void)
       return -1;
     }
   } else {
-    if((ip = namei(path)) == 0){
+    if((ip = namei(path)) == 0){ //Path does not exist
       end_op();
       return -1;
     }
     ilock(ip);
+
+    
+    //Handle Symlinks
+
+    int rekPath = 0; //Count Symlink-Chains
+
+    //While path is SYMLINK, O_NOWFOLLOW is not set and have not reached max. depth
+    while(ip->type == T_SYMLINK	&& !(omode & O_NOFOLLOW) && rekPath <= 10) {
+      
+      if(readi(ip, 0, (uint64)path, 0, ip->size) == ip->size) {
+
+          iunlock(ip);
+          //Last symlink was a dangling symlink
+          if((ip = namei(path)) == 0) {
+
+            end_op();
+            return -1;
+
+          }
+          ilock(ip);
+          rekPath ++;
+
+        } else {
+
+          iunlock(ip);
+          end_op();
+          return -1;
+
+        }
+
+    }
+
+    //Rekursion-Depth reached
+    if(rekPath > 10) {
+      iunlock(ip);
+      end_op();
+      return -1;
+    }
+
     if(ip->type == T_DIR && omode != O_RDONLY){
       iunlockput(ip);
       end_op();
@@ -482,5 +521,33 @@ sys_pipe(void)
     fileclose(wf);
     return -1;
   }
+  return 0;
+}
+
+uint64 sys_symlink() {
+
+  char* target = 0;
+  char* path = 0;
+
+  if(argstr(0, target, MAXPATH) < 0 || argstr(0, path, MAXPATH) < 0) {
+    return -1;
+  }
+
+  begin_op();
+  struct inode* in = create(path, T_SYMLINK, 0, 0);
+
+  //Could not create node
+  if(in == 0) {
+    end_op();
+    return -1;
+  }
+
+  if(writei(in, 0, (uint64)target, 0, strlen(target)) != strlen(target)) {
+    panic("symlink: writei failed");
+    return -1;
+  }
+  
+  end_op();
+
   return 0;
 }

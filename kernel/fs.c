@@ -686,3 +686,29 @@ nameiparent(char *path, char *name)
 {
   return namex(path, 1, name);
 }
+
+int permission(struct inode* ip, int mask) {
+
+  //Root User or users who are in root group have all permissions
+  if(myproc()->uid == 0 || myproc()->gid == 0) return 1;
+
+  //Check if the user has permission to access the file
+
+  //Is Owner
+  if(ip->uid == myproc()->uid) {
+    short ownerMask = (mask & 0b000111000);
+    if((ip->mode & ownerMask) == ownerMask) return 1;
+  }
+  
+  //Is Group
+  if(ip->gid == myproc()->gid) {
+    short groupMask = (mask & 0b111000000);
+    if((ip->mode & groupMask) == groupMask) return 1;
+  }
+
+  //Is Other
+  short otherMask = (mask & 0b000000111);
+  if((ip->mode & otherMask) == otherMask) return 1;
+
+  return 0;
+}

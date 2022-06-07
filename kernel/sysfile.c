@@ -556,3 +556,27 @@ uint64 sys_symlink(void) {
 
   return 0;
 }
+
+uint64 sys_chown(void) {
+
+  char path[MAXPATH];
+  int uid, gid;
+
+  if(argstr(0, path, MAXPATH) < 0 || argint(1, &uid) < 0 || argint(2, &gid) < 0) {
+    if(DEBUG_MODE) printf("Parameter fails\n");
+    return -1;
+  }
+
+  begin_op();
+  
+  struct inode* in = namei(path);
+  in->uid = uid;
+  in->gid = gid;
+
+  iunlockput(in);
+  end_op();
+}
+
+uint64 sys_chmod(void) {
+
+}

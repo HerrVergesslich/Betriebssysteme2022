@@ -63,7 +63,19 @@ ls(char *path)
         printf("ls: cannot stat %s\n", buf);
         continue;
       }
-      printf("%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
+
+      char* otype = st.type == T_DIR ? "d" : "-";
+      char* oread = (st.mode & (0b100 << 6)) ? "r" : "-";
+      char* owrite= (st.mode & (0b010 << 6)) ? "w" : "-";
+      char* oexec = (st.mode & (0b001 << 6)) ? "x" : "-";
+      char* gread = (st.mode & (0b100 << 3)) ? "r" : "-";
+      char* gwrite= (st.mode & (0b010 << 3)) ? "w" : "-";
+      char* gexec = (st.mode & (0b001 << 3)) ? "x" : "-";
+      char* read  = (st.mode & (0b100 << 0)) ? "r" : "-";
+      char* write = (st.mode & (0b010 << 0)) ? "w" : "-";
+      char* exec  = (st.mode & (0b001 << 0)) ? "x" : "-";
+
+      printf("%s%s%s%s%s%s%s%s%s%s 1 %d %d %s %d %d %d\n", otype, oread, owrite, oexec, gread, gwrite, gexec, read, write, exec, st.uid, st.gid, fmtname(buf), st.type, st.ino, st.size);
     }
     break;
   }

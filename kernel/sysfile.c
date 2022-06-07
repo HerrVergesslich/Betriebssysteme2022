@@ -302,17 +302,22 @@ sys_open(void)
     struct inode* parent = nameiparent(path, parentName);
 
     if(!permission(parent, PERMISSION_WRITE)) {
-      iunlockput(parent);
       end_op();
       return -1;
     }
-    iunlockput(parent);
 
     ip = create(path, T_FILE, 0, 0);
     if(ip == 0){
       end_op();
       return -1;
     }
+
+    ip->uid = myproc()->uid;
+    ip->gid = myproc()->gid;
+    ip->mode = 0b110110100;
+
+    iupdate(ip);
+
   } else {
     if((ip = namei(path)) == 0){ //Path does not exist
       end_op();
@@ -597,13 +602,18 @@ uint64 sys_chown(void) {
   
   struct inode* in = namei(path);
 
-  if(in->uid != -1 && myproc()->uid == 0)
+  if(in->uid != -1 && myproc()->uid == 0) {
+    if(DEBUG_MODE) printf("SET to UID=%d\n", uid);
     in->uid = uid;
+  }
 
-  if(in->gid != -1 && (myproc()->uid == 0 || myproc()->uid == in->uid))
+  if(in->gid != -1 && (myproc()->uid == 0 || myproc()->uid == in->uid)) {
+    if(DEBUG_MODE) printf("SET to GID=%d\n", gid);
     in->gid = gid;
+  }
 
-  iunlockput(in);
+  iupdate(in);
+  iput(in);
   end_op();
 
   return 0;
@@ -631,14 +641,15 @@ uint64 sys_chmod(void) {
 
   if(myproc()->uid == in->uid || myproc()->uid == 0) {
     in->mode = mode;
+    iupdate(in);
   } else {
-    iunlockput(in);
+    iput(in);
     end_op();
     if(DEBUG_MODE) printf("chmod: Permission denied\n");
     return -1;
   }
 
-  iunlockput(in);
+  iput(in);
   end_op();
   return 0;
 }

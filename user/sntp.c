@@ -2,6 +2,7 @@
 #include "kernel/net.h"
 #include "kernel/stat.h"
 #include "user/user.h"
+#include "sntp.h"
 
 #define GT +2
 
@@ -40,6 +41,41 @@ void
 sntp(void) 
 {
     
+    int fd;
+    uint32 dst = (192 << 24) | (53 << 16) | (103 << 8) | (108 << 0);
+
+    struct sntp* packet = malloc(sizeof(struct sntp));
+
+    packet->li_vn_mode = 0b11100011; //leap indicator, version, mode
+    packet->stratum = 0;
+    packet->poll = 0;
+    packet->precision = 0;
+    packet->root_delay = 0;
+    packet->root_dispersion = 0;
+    packet->reference_id = 0;
+    packet->reference_timestamp = 0;
+    packet->originate_timestamp = 0;
+    packet->receive_timestamp = 0;
+    packet->transmit_timestamp = 0;
+
+    if((fd = connect(dst, 2001, 123)) < 0) {
+        fprintf(2, "sntp: connect() failed\n");
+        exit(1);
+    }
+
+    if(write(fd, packet, sizeof(struct sntp)) < 0) {
+        fprintf(2, "sntp: write() failed\n");
+        exit(1);
+    }
+
+    if(read(fd, packet, sizeof(struct sntp)) < 0) {
+        fprintf(2, "sntp: read() failed\n");
+        exit(1);
+    }
+
+    printDate(ntohl(packet->transmit_timestamp));
+
+    close(fd);
 }
 
 int

@@ -171,9 +171,3 @@ struct dns_data {
   uint32 ttl;
   uint16 len;
 } __attribute__((packed));
-
-// sntp reqest and response header
-// see: https://www.rfc-editor.org/rfc/rfc4330.html#page-8
-struct sntp {
-
-} __attribute__((packed));

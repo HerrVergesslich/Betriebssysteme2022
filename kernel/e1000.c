@@ -95,26 +95,67 @@ e1000_init(uint32 *xregs)
 int
 e1000_transmit(struct mbuf *m)
 {
-  //
-  // Your code here.
-  //
-  // the mbuf contains an ethernet frame; program it into
-  // the TX descriptor ring so that the e1000 sends it. Stash
-  // a pointer so that it can be freed after sending.
-  //
-  
+  acquire(&e1000_lock);
+
+  int ptr = regs[E1000_TDT];
+
+  //Check if previous packet is done
+  if((tx_ring[ptr].status & E1000_TXD_STAT_DD) == 0){
+    release(&e1000_lock);
+    printf("e1000: previous packet not done\n");
+    return -1; 
+  }
+
+  //Previous packet is sent -> free previous packet
+  struct mbuf* prev_packet = tx_mbufs[ptr];
+  if(prev_packet)
+    mbuffree(prev_packet);
+
+  //Write new package to TX descriptor ring
+
+  tx_ring[ptr].addr = (uint64) m->head;
+  tx_ring[ptr].length = (uint64) m->len;
+
+  tx_ring[ptr].cmd |= E1000_TXD_CMD_RS; // Report Status for this packet. Used do determine if packet was sent successfully.
+  tx_ring[ptr].cmd |= E1000_TXD_CMD_EOP; // Marks end of packet.
+
+  tx_mbufs[ptr] = m;
+
+  //Update ring position
+  regs[E1000_TDT] = (ptr + 1) % TX_RING_SIZE;
+  release(&e1000_lock);
+
   return 0;
 }
 
 static void
 e1000_recv(void)
 {
-  //
-  // Your code here.
-  //
-  // Check for packets that have arrived from the e1000
-  // Create and deliver an mbuf for each packet (using net_rx()).
-  //
+
+  acquire(&e1000_lock);
+
+  int ptr = (regs[E1000_RDT]+1) % RX_RING_SIZE;
+
+  //While packet is not processed -> process it
+  while(rx_ring[ptr].status & E1000_RXD_STAT_DD) {
+    int length = rx_ring[ptr].length;
+    mbufput(rx_mbufs[ptr], length);
+    release(&e1000_lock);
+    net_rx(rx_mbufs[ptr]);
+    acquire(&e1000_lock);
+
+    rx_mbufs[ptr] = mbufalloc(0);
+    if (!rx_mbufs[ptr])
+      panic("e1000: recv");
+
+    rx_ring[ptr].addr = (uint64) rx_mbufs[ptr]->head;
+    rx_ring[ptr].status = 0x00;
+
+    regs[E1000_RDT] = ptr;
+    ptr = (ptr + 1) % RX_RING_SIZE;
+  }
+
+  release(&e1000_lock);
 
 }
 
